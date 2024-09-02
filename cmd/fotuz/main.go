@@ -33,7 +33,7 @@ func main() {
 		log.Fatal("image path not found", err)
 	}
 
-	fmt.Println(imagePath)
+	imagePath = strings.TrimSpace(imagePath)
 
 	// create output folder if not exist
 	// or check bucket
@@ -70,10 +70,28 @@ func main() {
 		if err != nil {
 			log.Println("err in Save :img ", img)
 		}
-
-		// save to DB
-		data.InsertOne(data.COLLECTION_BUCKET, allImages)
-
 	}
 
+	var b Bucket
+	b.Name = "Test"
+	b.Images = allImages
+	b.VendorID = "vendor1"
+	b.ClientID = "client1"
+	b.CreatedAt = time.Now()
+	data.InsertOne(data.COLLECTION_BUCKET, b)
+
+}
+
+type Bucket struct {
+	Name          string              `json:"name" bson:"name"`
+	Images        []string            `json:"images" bson:"images"`
+	Selected      map[string][]string `json:"selected" bson:"selected"`
+	Rejected      map[string][]string `json:"rejected" bson:"rejected"`
+	ShareableLink string              `json:"shareable_link" bson:"shareable_link"`
+	StorageType   string              `json:"storage_type" bson:"storage_type"`
+	VendorID      string              `json:"vendor_id" bson:"vendor_id"`
+	ClientID      string              `json:"client_id" bson:"client_id"`
+	Selectors     []string            `json:"selectors" bson:"selectors"`
+	CreatedAt     time.Time           `json:"created_at" bson:"created_at"`
+	UpdatedAt     string              `json:"updated_at" bson:"updated_at"`
 }
