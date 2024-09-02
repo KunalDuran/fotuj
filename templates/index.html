@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Reviewer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.7.0"></script>
+    <style>
+        .swipe-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative;
+        }
+        .image-preview {
+            max-width: 100%;
+            max-height: 80vh;
+        }
+        .status-indicator {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        .btn-navigation {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+        }
+        .btn-prev {
+            left: 20px;
+        }
+        .btn-next {
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="swipe-area">
+            <button class="btn btn-secondary btn-navigation btn-prev" onclick="showPrevImage()">Prev</button>
+            {{range $index, $image := .Images}}
+            <div class="image-container" id="image-{{$index}}" style="{{if gt $index 0}}display:none;{{end}}">
+                {{range $statusIndex, $status := $.ImageStatuses}}
+                {{if eq $status.Image $image}}
+                <div class="status-indicator {{if eq $status.Status "selected"}}text-success{{else if eq $status.Status "rejected"}}text-danger{{else}}d-none{{end}}">
+                    {{if eq $status.Status "selected"}}Selected{{else if eq $status.Status "rejected"}}Rejected{{end}}
+                </div>
+                {{end}}
+                {{end}}
+                <!-- <img src="/images/{{$image}}" class="image-preview" alt="Image"> -->
+                <img src="/images/{{$image}}" class="image-preview" alt="Image">
+                <div class="d-flex justify-content-between mt-2">
+                    <button class="btn btn-danger" hx-post="/update-status" hx-vals='{"image": "{{$image}}", "status": "rejected"}' hx-swap="none" onclick="updateStatusAndShowNext('{{$image}}', 'rejected')">Reject</button>
+                    <button class="btn btn-success" hx-post="/update-status" hx-vals='{"image": "{{$image}}", "status": "selected"}' hx-swap="none" onclick="updateStatusAndShowNext('{{$image}}', 'selected')">Select</button>
+                </div>
+            </div>
+            {{end}}
+            <button class="btn btn-secondary btn-navigation btn-next" onclick="showNextImage()">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let currentIndex = 0;
+        let startX = 0;
+
+        function showNextImage() {
+            document.getElementById('image-' + currentIndex).style.display = 'none';
+            currentIndex++;
+            if (currentIndex >= {{len .Images}}) {
+                currentIndex = 0;
+            }
+            document.getElementById('image-' + currentIndex).style.display = 'block';
+        }
+
+        function showPrevImage() {
+            document.getElementById('image-' + currentIndex).style.display = 'none';
+            currentIndex--;
+            if (currentIndex < 0) {
+                currentIndex = {{len .Images}} - 1;
+            }
+            document.getElementById('image-' + currentIndex).style.display = 'block';
+        }
+
+        function updateStatusAndShowNext(image, status) {
+            const formData = new FormData();
+            formData.append('image', image);
+            formData.append('status', status);
+            fetch('/update-status', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    showNextImage();
+                }
+            });
+        }
+
+        function handleTouchStart(event) {
+            startX = event.touches[0].clientX;
+        }
+
+        function handleTouchMove(event) {
+            if (!startX) {
+                return;
+            }
+            let endX = event.touches[0].clientX;
+            let diffX = startX - endX;
+            if (Math.abs(diffX) > 50) {
+                document.getElementById('image-' + currentIndex).style.display = 'none';
+                if (diffX > 0) {
+                    // Swipe left
+                    const image = document.querySelector(`#image-${currentIndex} img`).src.split('/').pop();
+                    updateStatusAndShowNext(image, 'rejected');
+                } else {
+                    // Swipe right
+                    const image = document.querySelector(`#image-${currentIndex} img`).src.split('/').pop();
+                    updateStatusAndShowNext(image, 'selected');
+                }
+                startX = 0; // reset startX
+            }
+        }
+
+        document.querySelector('.swipe-area').addEventListener('touchstart', handleTouchStart);
+        document.querySelector('.swipe-area').addEventListener('touchmove', handleTouchMove);
+    </script>
+</body>
+</html>

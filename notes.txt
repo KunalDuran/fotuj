@@ -1,0 +1,30 @@
+
+
+DB structure
+
+- buckets
+    {
+        "name":"",
+        "images": ["img1.jpg", "img2.jpg", "img3.jpg"],
+        "selected":{"img4.jpg":["selector1", "selector2"]},
+        "rejected":{"img5.jpg":["selector3", "selector2"]},
+        "shareable_link":"",
+        "storage_type":"",
+        "vendor_id":"",
+        "client_id":"",
+        "selectors":[""],
+        "access_policy":"everyone"    
+        "created_at": "ISODate",
+        "updated_at": "ISODate"
+    }
+
+- vendors
+    {
+        "name":"vendor1",
+        "mail":"vendor1@gmail.com",
+        "phone":"999",
+        "created_at": "ISODate",
+        "updated_at": "ISODate"
+    }
+
+- image_bucket
