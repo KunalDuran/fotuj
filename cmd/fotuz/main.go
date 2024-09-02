@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"image"
 	"io/fs"
@@ -11,14 +12,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/KunalDuran/image-reviewer/internal/bucket"
 	"github.com/KunalDuran/image-reviewer/internal/data"
+	"github.com/KunalDuran/image-reviewer/internal/storage"
 	"github.com/KunalDuran/image-reviewer/internal/tasvir"
+	"github.com/KunalDuran/image-reviewer/internal/web"
 )
 
 func main() {
-
-	data.InitDB("")
 
 	start := time.Now()
 	defer func() {
@@ -37,7 +37,7 @@ func main() {
 
 	// create output folder if not exist
 	// or check bucket
-	bucket := bucket.MakeBucket("output", bucket.LOCAL)
+	store := storage.MakeBucket("output", storage.LOCAL)
 
 	// walk path
 	var allImages []string
@@ -66,32 +66,25 @@ func main() {
 		}
 
 		// save output
-		err = bucket.Save(img, tasvir.CompressImage(imgFile))
+		err = store.Save(img, tasvir.CompressImage(imgFile))
 		if err != nil {
 			log.Println("err in Save :img ", img)
 		}
 	}
 
-	var b Bucket
+	var b data.Bucket
 	b.Name = "Test"
 	b.Images = allImages
 	b.VendorID = "vendor1"
 	b.ClientID = "client1"
 	b.CreatedAt = time.Now()
-	data.InsertOne(data.COLLECTION_BUCKET, b)
 
-}
+	url := "http://localhost:8080/update"
 
-type Bucket struct {
-	Name          string              `json:"name" bson:"name"`
-	Images        []string            `json:"images" bson:"images"`
-	Selected      map[string][]string `json:"selected" bson:"selected"`
-	Rejected      map[string][]string `json:"rejected" bson:"rejected"`
-	ShareableLink string              `json:"shareable_link" bson:"shareable_link"`
-	StorageType   string              `json:"storage_type" bson:"storage_type"`
-	VendorID      string              `json:"vendor_id" bson:"vendor_id"`
-	ClientID      string              `json:"client_id" bson:"client_id"`
-	Selectors     []string            `json:"selectors" bson:"selectors"`
-	CreatedAt     time.Time           `json:"created_at" bson:"created_at"`
-	UpdatedAt     string              `json:"updated_at" bson:"updated_at"`
+	postData, err := json.Marshal(b)
+	if err != nil {
+		log.Println(err)
+	}
+	web.WebRequest(url, string(postData))
+
 }
