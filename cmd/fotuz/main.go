@@ -16,6 +16,7 @@ import (
 	"github.com/KunalDuran/image-reviewer/internal/storage"
 	"github.com/KunalDuran/image-reviewer/internal/tasvir"
 	"github.com/KunalDuran/image-reviewer/internal/web"
+	"github.com/google/uuid"
 )
 
 func main() {
@@ -35,9 +36,16 @@ func main() {
 
 	imagePath = strings.TrimSpace(imagePath)
 
+	var b data.Bucket
+	b.Name = "Test"
+	b.VendorID = "vendor1"
+	b.ClientID = "client1"
+	b.CreatedAt = time.Now()
+	b.Key = GenerateKey()
+
 	// create output folder if not exist
 	// or check bucket
-	store := storage.MakeBucket("output", storage.LOCAL)
+	store := storage.MakeBucket(filepath.Join("output", b.Key), storage.LOCAL)
 
 	// walk path
 	var allImages []string
@@ -47,7 +55,6 @@ func main() {
 		}
 		return err
 	})
-
 	if err != nil {
 		log.Fatal("Incorrect Folder Path: ", err)
 	}
@@ -66,25 +73,35 @@ func main() {
 		}
 
 		// save output
-		err = store.Save(img, tasvir.CompressImage(imgFile))
+		err = store.Save(img, store.Path, tasvir.CompressImage(imgFile))
 		if err != nil {
-			log.Println("err in Save :img ", img)
+			log.Println("err in Save :img ", err)
 		}
 	}
 
-	var b data.Bucket
-	b.Name = "Test"
-	b.Images = allImages
-	b.VendorID = "vendor1"
-	b.ClientID = "client1"
-	b.CreatedAt = time.Now()
+	for _, i := range allImages {
+		b.Images = append(b.Images, filepath.Base(i))
+	}
 
-	url := "http://localhost:8080/update"
+	url := "http://localhost:8080/bucket"
 
 	postData, err := json.Marshal(b)
 	if err != nil {
 		log.Println(err)
 	}
-	web.WebRequest(url, string(postData))
+	body, status, err := web.WebRequest(url, string(postData))
+	if err != nil {
+		log.Fatal("request failed", err)
+	}
 
+	fmt.Println(body)
+	fmt.Println(status)
+
+	fmt.Println("Shareable Link: http://localhost:8080?key=" + b.Key)
+
+}
+
+func GenerateKey() string {
+	id := uuid.New()
+	return id.String()
 }

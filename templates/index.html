@@ -44,19 +44,12 @@
 </head>
 <body>
     <div class="container">
+       {{ $key := .Key }}
         <div class="swipe-area">
             <button class="btn btn-secondary btn-navigation btn-prev" onclick="showPrevImage()">Prev</button>
             {{range $index, $image := .Images}}
             <div class="image-container" id="image-{{$index}}" style="{{if gt $index 0}}display:none;{{end}}">
-                {{range $statusIndex, $status := $.ImageStatuses}}
-                {{if eq $status.Image $image}}
-                <div class="status-indicator {{if eq $status.Status "selected"}}text-success{{else if eq $status.Status "rejected"}}text-danger{{else}}d-none{{end}}">
-                    {{if eq $status.Status "selected"}}Selected{{else if eq $status.Status "rejected"}}Rejected{{end}}
-                </div>
-                {{end}}
-                {{end}}
-                <!-- <img src="/images/{{$image}}" class="image-preview" alt="Image"> -->
-                <img src="/images/{{$image}}" class="image-preview" alt="Image">
+                <img src="/images/{{ $key }}/{{$image}}" class="image-preview" alt="Image">
                 <div class="d-flex justify-content-between mt-2">
                     <button class="btn btn-danger" hx-post="/update-status" hx-vals='{"image": "{{$image}}", "status": "rejected"}' hx-swap="none" onclick="updateStatusAndShowNext('{{$image}}', 'rejected')">Reject</button>
                     <button class="btn btn-success" hx-post="/update-status" hx-vals='{"image": "{{$image}}", "status": "selected"}' hx-swap="none" onclick="updateStatusAndShowNext('{{$image}}', 'selected')">Select</button>
@@ -66,7 +59,7 @@
             <button class="btn btn-secondary btn-navigation btn-next" onclick="showNextImage()">Next</button>
         </div>
     </div>
-
+    
     <script>
         let currentIndex = 0;
         let startX = 0;

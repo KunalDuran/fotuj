@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	db *mongo.Client
+	db                *mongo.Client
 	COLLECTION_BUCKET = "bucket"
 	COLLECTION_VENDOR = "vendor"
 )
@@ -48,9 +48,14 @@ func InsertOne(collection string, document interface{}) error {
 	return err
 }
 
-func FindOne(collection string, filter bson.M, result interface{}) error {
+func FindOne(collection string, filter map[string]interface{}, result interface{}) error {
+	var f = make(bson.M)
+	for k, v := range filter {
+		f[k] = v
+	}
+
 	c := GetCollection(collection)
-	err := c.FindOne(context.Background(), filter).Decode(result)
+	err := c.FindOne(context.Background(), f).Decode(result)
 	return err
 }
 

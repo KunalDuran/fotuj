@@ -19,8 +19,8 @@ func MakeBucket(path, bType string) Storage {
 	if bType == LOCAL {
 		if ok, _ := exists(path); !ok {
 			// log.Fatal("image path does not exist")
-			if err := os.Mkdir("output", 0777); err != nil {
-				log.Fatal("Error creating output dir")
+			if err := os.Mkdir(path, 0777); err != nil {
+				log.Fatal("Error creating dir: ", path)
 			}
 		}
 	}
@@ -28,8 +28,8 @@ func MakeBucket(path, bType string) Storage {
 	return Storage{Path: path, Type: bType}
 }
 
-func (b Storage) Save(img string, w io.ReadWriter) error {
-	outputPath := filepath.Join("output", "_"+filepath.Base(img))
+func (b Storage) Save(img, out string, w io.ReadWriter) error {
+	outputPath := filepath.Join(out, filepath.Base(img))
 	f, err := os.OpenFile(outputPath, os.O_CREATE, 0777)
 	if err != nil {
 		return err

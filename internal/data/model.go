@@ -4,6 +4,7 @@ import "time"
 
 type Bucket struct {
 	Name          string              `json:"name" bson:"name"`
+	Key           string              `json:"key" bson:"key"`
 	Images        []string            `json:"images" bson:"images"`
 	Selected      map[string][]string `json:"selected" bson:"selected"`
 	Rejected      map[string][]string `json:"rejected" bson:"rejected"`
