@@ -6,7 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"os"
+	"strconv"
 
 	"github.com/KunalDuran/image-reviewer/internal/data"
 )
@@ -22,22 +22,29 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	err := data.FindOne(data.COLLECTION_BUCKET, filter, &result)
 	if err != nil {
 		log.Println(err)
+		return
 	}
-
-	fmt.Println(os.Getwd())
 
 	tmpl, err := template.ParseFiles("templates/index.html")
 	if err != nil {
-		fmt.Errorf("Template not found")
+		log.Println("Template parsing error:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
 	}
 
-	tmpl.Execute(w, result)
+	err = tmpl.Execute(w, result)
+	if err != nil {
+		log.Println("Template execution error:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func bucketHandler(w http.ResponseWriter, r *http.Request) {
 	var b data.Bucket
-	if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
-		log.Println(err)
+
+	err := json.NewDecoder(r.Body).Decode(&b)
+	if err != nil {
 		fmt.Fprint(w, err)
 	}
 
@@ -46,11 +53,27 @@ func bucketHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateStatusHandler(w http.ResponseWriter, r *http.Request) {
-	// body, err := io.ReadAll(r.Body)
-	// if err != nil {
-	// 	log.Println(err)
-	// }
+	if r.Method == "POST" {
+		image := r.FormValue("image")
+		status := r.FormValue("status")
+		key := r.FormValue("key")
 
+		fmt.Println(image, status, key)
+
+		statusInt, err := strconv.Atoi(status)
+		if err != nil {
+			fmt.Fprint(w, "Wrong status")
+			return
+		}
+
+		err = data.UpdateStatus(key, image, statusInt)
+		if err != nil {
+			fmt.Fprint(w, "Error in image selection")
+			return
+		}
+
+		fmt.Fprint(w, "Success")
+	}
 }
 
 func main() {
@@ -59,7 +82,7 @@ func main() {
 
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/bucket", bucketHandler)
-	http.HandleFunc("/update-status", updateStatusHandler)
+	http.HandleFunc("/select", updateStatusHandler)
 
 	fs := http.FileServer(http.Dir("./output"))
 	http.Handle("/images/", http.StripPrefix("/images/", fs))

@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -72,8 +73,8 @@ func FindAll(collection string, filter bson.M, results interface{}, opts ...*opt
 
 func UpdateOne(collection string, filter bson.M, update bson.M, opts ...*options.UpdateOptions) error {
 	c := GetCollection(collection)
-
-	_, err := c.UpdateOne(context.Background(), filter, update, opts...)
+	r, err := c.UpdateOne(context.Background(), filter, update, opts...)
+	fmt.Println(r)
 	return err
 }
 

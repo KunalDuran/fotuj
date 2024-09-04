@@ -49,10 +49,12 @@
             <button class="btn btn-secondary btn-navigation btn-prev" onclick="showPrevImage()">Prev</button>
             {{range $index, $image := .Images}}
             <div class="image-container" id="image-{{$index}}" style="{{if gt $index 0}}display:none;{{end}}">
-                <img src="/images/{{ $key }}/{{$image}}" class="image-preview" alt="Image">
+                <div class="status-indicator {{if eq $image.Status 1}}text-success{{else if eq $image.Status 99}}text-danger{{else}}d-none{{end}}">
+                    {{if eq $image.Status 1}}Selected{{else if eq $image.Status 0}}Rejected{{end}}
+                </div>
+                <img src="/images/{{ $key }}/{{$image.Path}}" class="image-preview" alt="Image">
                 <div class="d-flex justify-content-between mt-2">
-                    <button class="btn btn-danger" hx-post="/update-status" hx-vals='{"image": "{{$image}}", "status": "rejected"}' hx-swap="none" onclick="updateStatusAndShowNext('{{$image}}', 'rejected')">Reject</button>
-                    <button class="btn btn-success" hx-post="/update-status" hx-vals='{"image": "{{$image}}", "status": "selected"}' hx-swap="none" onclick="updateStatusAndShowNext('{{$image}}', 'selected')">Select</button>
+                    <button class="btn btn-success" onclick="updateStatusAndShowNext('{{$image.Path}}', 1, '{{$key}}')">Select</button>
                 </div>
             </div>
             {{end}}
@@ -82,11 +84,12 @@
             document.getElementById('image-' + currentIndex).style.display = 'block';
         }
 
-        function updateStatusAndShowNext(image, status) {
+        function updateStatusAndShowNext(image, status, key) {
             const formData = new FormData();
             formData.append('image', image);
             formData.append('status', status);
-            fetch('/update-status', {
+            formData.append('key', key);
+            fetch('/select', {
                 method: 'POST',
                 body: formData
             }).then(response => {

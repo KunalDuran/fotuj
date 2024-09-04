@@ -21,6 +21,12 @@ import (
 
 func main() {
 
+	// client
+	// photographer
+	// api domain
+	// mongo uri
+	// bucket name
+
 	start := time.Now()
 	defer func() {
 		fmt.Println(time.Since(start))
@@ -78,9 +84,10 @@ func main() {
 			log.Println("err in Save :img ", err)
 		}
 	}
-
 	for _, i := range allImages {
-		b.Images = append(b.Images, filepath.Base(i))
+		var img data.Image
+		img.Path = filepath.Base(i)
+		b.Images = append(b.Images, img)
 	}
 
 	url := "http://localhost:8080/bucket"
