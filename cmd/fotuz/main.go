@@ -19,33 +19,25 @@ import (
 	"github.com/google/uuid"
 )
 
-func main() {
+type config struct {
+	Client    string
+	Vendor    string
+	ServerURI string
+}
 
-	// client
-	// photographer
-	// api domain
-	// mongo uri
-	// bucket name
+func main() {
 
 	start := time.Now()
 	defer func() {
 		fmt.Println(time.Since(start))
 	}()
 
-	// get path
-	fmt.Printf("Enter path to image folder/directory and press enter: \n>>> ")
-	in := bufio.NewReader(os.Stdin)
-	imagePath, err := in.ReadString('\n')
-	if err != nil {
-		log.Fatal("image path not found", err)
-	}
-
-	imagePath = strings.TrimSpace(imagePath)
+	imagePath := prompt("Enter path to image folder/directory")
 
 	var b data.Bucket
-	b.Name = "Test"
-	b.VendorID = "vendor1"
-	b.ClientID = "client1"
+	b.Name = prompt("Enter Project Name")
+	b.PhotographerID = prompt("Enter Photographer's Name/ID")
+	b.ClientID = prompt("Enter Client's Name")
 	b.CreatedAt = time.Now()
 	b.Key = GenerateKey()
 
@@ -55,6 +47,7 @@ func main() {
 
 	// walk path
 	var allImages []string
+	var err error
 	err = filepath.Walk(imagePath, func(path string, info fs.FileInfo, err error) error {
 		if strings.HasSuffix(strings.ToLower(path), "jpg") || strings.HasSuffix(strings.ToLower(path), "jpeg") {
 			allImages = append(allImages, path)
@@ -86,6 +79,7 @@ func main() {
 	}
 	for _, i := range allImages {
 		var img data.Image
+		img.AbsolutePath = i
 		img.Path = filepath.Base(i)
 		b.Images = append(b.Images, img)
 	}
@@ -96,19 +90,27 @@ func main() {
 	if err != nil {
 		log.Println(err)
 	}
-	body, status, err := web.WebRequest(url, string(postData))
+	_, _, err = web.WebRequest(url, string(postData))
 	if err != nil {
 		log.Fatal("request failed", err)
 	}
 
-	fmt.Println(body)
-	fmt.Println(status)
-
 	fmt.Println("Shareable Link: http://localhost:8080?key=" + b.Key)
-
 }
 
 func GenerateKey() string {
 	id := uuid.New()
 	return id.String()
+}
+
+func prompt(msg string) string {
+	r := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Fprint(os.Stderr, msg+" ")
+		input, _ := r.ReadString('\n')
+		input = strings.TrimSpace(input)
+		if input != "" {
+			return input
+		}
+	}
 }
