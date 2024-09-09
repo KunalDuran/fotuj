@@ -12,10 +12,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/KunalDuran/image-reviewer/internal/data"
-	"github.com/KunalDuran/image-reviewer/internal/storage"
-	"github.com/KunalDuran/image-reviewer/internal/tasvir"
-	"github.com/KunalDuran/image-reviewer/internal/web"
+	"github.com/KunalDuran/fotuj/internal/data"
+	"github.com/KunalDuran/fotuj/internal/storage"
+	"github.com/KunalDuran/fotuj/internal/tasvir"
+	"github.com/KunalDuran/fotuj/internal/web"
 	"github.com/google/uuid"
 )
 

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/KunalDuran/image-reviewer/internal/data"
+	"github.com/KunalDuran/fotuj/internal/data"
 )
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
