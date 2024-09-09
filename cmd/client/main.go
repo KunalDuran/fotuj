@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	CMD_PROCESS_IMG  = "1"
-	CMD_LIST_BUCKETS = "2"
+	CMD_PROCESS_IMG   = "1"
+	CMD_LIST_PROJECTS = "2"
 )
 
 type config struct {
@@ -17,8 +17,8 @@ type config struct {
 }
 
 var initialPrompt = `Select action: Type number and press enter: 
-1. Process and upload Images
-2. List Projects
+1. Create new project
+2. View projects
 `
 
 func main() {
@@ -31,7 +31,7 @@ func main() {
 	switch command {
 	case CMD_PROCESS_IMG:
 		ProcessImages()
-	case CMD_LIST_BUCKETS:
-		ListBuckets("vendor1")
+	case CMD_LIST_PROJECTS:
+		ShowProjects()
 	}
 }

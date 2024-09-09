@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"image"
 	"io/fs"
@@ -15,19 +14,19 @@ import (
 	"github.com/KunalDuran/fotuj/internal/data"
 	"github.com/KunalDuran/fotuj/internal/storage"
 	"github.com/KunalDuran/fotuj/internal/tasvir"
-	"github.com/KunalDuran/fotuj/internal/web"
 	"github.com/google/uuid"
 )
 
 func ProcessImages() {
 	imagePath := prompt("Enter path to image folder/directory")
-
-	var b data.Bucket
-	b.Name = prompt("Enter Project Name")
-	b.PhotographerID = prompt("Enter Photographer's Name/ID")
-	b.ClientID = prompt("Enter Client's Name")
+	db := data.NewSQLiteDB()
+	var b data.Project
+	b.Name = prompt("Enter project name")
+	b.VendorID = prompt("Enter your ID")
+	b.ClientID = prompt("Enter your Client's name")
 	b.CreatedAt = time.Now()
 	b.Key = GenerateKey()
+	b.Link = "http://localhost:8080?key=" + b.Key
 
 	// create output folder if not exist
 	// or check bucket
@@ -72,24 +71,34 @@ func ProcessImages() {
 		b.Images = append(b.Images, img)
 	}
 
-	url := "http://localhost:8080/bucket"
-
-	postData, err := json.Marshal(b)
+	err = db.AddProject(b)
 	if err != nil {
 		log.Println(err)
 	}
-	_, _, err = web.Request(url, string(postData))
-	if err != nil {
-		log.Fatal("request failed", err)
+	{
+		// url := "http://localhost:8080/bucket"
+
+		// postData, err := json.Marshal(b)
+		// if err != nil {
+		// 	log.Println(err)
+		// }
+
+		// _, _, err = web.Request(url, string(postData))
+		// if err != nil {
+		// 	log.Fatal("request failed", err)
+		// }
 	}
 
 	fmt.Println("Shareable Link: http://localhost:8080?key=" + b.Key)
 }
 
-func ListBuckets(vendor string) {
-	err := data.Buckets(vendor)
-	if err != nil {
-		log.Fatal(err)
+func ShowProjects() {
+	db := data.NewSQLiteDB()
+	projects, _ := db.GetProjects("")
+	for idx, project := range projects {
+		fmt.Printf("%d. %s\n", idx+1, project.Name)
+		fmt.Println(" Client: ", project.ClientID)
+		fmt.Println(" Link: ", project.Link)
 	}
 }
 

@@ -1,85 +1,30 @@
 package data
 
-import (
-	"context"
-	"fmt"
-	"log"
+import "time"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-)
-
-var (
-	db                *mongo.Client
-	COLLECTION_BUCKET = "bucket"
-	COLLECTION_VENDOR = "vendor"
-)
-
-func InitDB(mongoURI string) {
-
-	var err error
-	if mongoURI == "" {
-		mongoURI = "mongodb://localhost:27017"
-		log.Default().Println("MONGO_URI not found, using default value")
-	}
-
-	clientOptions := options.Client().ApplyURI(mongoURI)
-	db, err = mongo.Connect(context.TODO(), clientOptions)
-	if err != nil {
-		log.Fatal(err)
-	}
+type Project struct {
+	Key       string    `json:"key" bson:"key"`
+	Name      string    `json:"name" bson:"name"`
+	Path      string    `json:"path" bson:"path"`
+	VendorID  string    `json:"vendor_id" bson:"vendor_id"`
+	ClientID  string    `json:"client_id" bson:"client_id"`
+	Images    []Image   `json:"images" bson:"images"`
+	Link      string    `json:"link" bson:"link"`
+	CreatedAt time.Time `json:"created_at" bson:"created_at"`
+	UpdatedAt string    `json:"updated_at" bson:"updated_at"`
 }
 
-func GetCollection(name string) *mongo.Collection {
-	return db.Database("fotuj").Collection(name)
+type Image struct {
+	AbsolutePath string    `json:"absolute_path" bson:"absolute_path"`
+	Path         string    `json:"path" bson:"path"`
+	Status       int       `json:"status" bson:"status"`
+	UpdatedAt    time.Time `json:"updated_at" bson:"updated_at"`
 }
 
-func GetCollections() []string {
-	collections, err := db.Database("fotuj").ListCollectionNames(context.Background(), bson.M{})
-	if err != nil {
-		panic(err)
-	}
-	return collections
-}
+type Database interface {
+	AddProject(p Project) error
+	GetProjects(vendorID string) ([]Project, error)
+	GetProjectByKey(key string) (Project, error)
 
-func InsertOne(collection string, document interface{}) error {
-	c := GetCollection(collection)
-	_, err := c.InsertOne(context.Background(), document)
-	return err
-}
-
-func FindOne(collection string, filter map[string]interface{}, result interface{}) error {
-	var f = make(bson.M)
-	for k, v := range filter {
-		f[k] = v
-	}
-
-	c := GetCollection(collection)
-	err := c.FindOne(context.Background(), f).Decode(result)
-	return err
-}
-
-func FindAll(collection string, filter bson.M, results interface{}, opts ...*options.FindOptions) error {
-	c := GetCollection(collection)
-	cursor, err := c.Find(context.Background(), filter)
-	if err != nil {
-		return err
-	}
-	defer cursor.Close(context.Background())
-
-	return cursor.All(context.Background(), results)
-}
-
-func UpdateOne(collection string, filter bson.M, update bson.M, opts ...*options.UpdateOptions) error {
-	c := GetCollection(collection)
-	r, err := c.UpdateOne(context.Background(), filter, update, opts...)
-	fmt.Println(r)
-	return err
-}
-
-func DeleteOne(collection string, filter bson.M) error {
-	c := GetCollection(collection)
-	_, err := c.DeleteOne(context.Background(), filter)
-	return err
+	UpdateImageStatus(pKey, image, status string) error
 }
