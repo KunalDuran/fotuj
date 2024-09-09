@@ -6,6 +6,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+func Buckets(vendor string) error {
+	filter := bson.M{
+		"photographerID": vendor,
+	}
+
+	var result []Bucket
+	return FindAll(COLLECTION_BUCKET, filter, &result)
+}
+
 func UpdateStatus(key, image string, status int) error {
 	filter := bson.M{
 		"key":         key,

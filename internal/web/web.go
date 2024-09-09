@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func WebRequest(url string, postdata string) ([]byte, int, error) {
+func Request(url string, postdata string) ([]byte, int, error) {
 	var body []byte
 	resp, err := http.Post(url, "application/json", strings.NewReader(postdata))
 	if err != nil {
