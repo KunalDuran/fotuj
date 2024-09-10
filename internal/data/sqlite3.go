@@ -51,7 +51,11 @@ func NewSQLiteDB() *SQLiteDB {
 	return &SQLiteDB{db: db}
 }
 
-func (s SQLiteDB) UpdateImageStatus(pKey, image, status string) error {
+func (s SQLiteDB) UpdateImageStatus(key, image, status string) error {
+	_, err := s.db.Exec("UPDATE image SET status=? WHERE key=? AND path=?", status, key, image)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -92,6 +96,34 @@ func (s SQLiteDB) GetProjectByKey(key string) (Project, error) {
 	}
 
 	return p, nil
+}
+
+func (s SQLiteDB) GetImagesByKey(key string) ([]Image, error) {
+	var result []Image
+
+	stmt, err := s.db.Prepare(`SELECT 
+		path,
+		absolute_path,
+		status FROM image WHERE key=?`)
+	if err != nil {
+		return result, err
+	}
+
+	rows, err := stmt.Query(key)
+	for rows.Next() {
+		var img Image
+		rows.Scan(
+			&img.Path,
+			&img.AbsolutePath,
+			&img.Status,
+		)
+		result = append(result, img)
+	}
+	if err != nil {
+		return result, err
+	}
+
+	return result, nil
 }
 
 func (s SQLiteDB) AddProject(p Project) error {

@@ -1,2 +1,5 @@
 output/
 *.exe
+selections/
+*.db
+*.sqlite3

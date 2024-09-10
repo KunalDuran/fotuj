@@ -11,7 +11,7 @@ type Project struct {
 	Images    []Image   `json:"images" bson:"images"`
 	Link      string    `json:"link" bson:"link"`
 	CreatedAt time.Time `json:"created_at" bson:"created_at"`
-	UpdatedAt string    `json:"updated_at" bson:"updated_at"`
+	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
 }
 
 type Image struct {
@@ -25,6 +25,7 @@ type Database interface {
 	AddProject(p Project) error
 	GetProjects(vendorID string) ([]Project, error)
 	GetProjectByKey(key string) (Project, error)
+	GetImagesByKey(key string) ([]Image, error)
 
 	UpdateImageStatus(pKey, image, status string) error
 }

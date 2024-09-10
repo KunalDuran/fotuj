@@ -13,10 +13,18 @@ import (
 func (app Application) indexHandler(w http.ResponseWriter, r *http.Request) {
 	key := r.URL.Query().Get("key")
 
-	proj, err := app.DB.GetProjectByKey(key)
+	images, err := app.DB.GetImagesByKey(key)
 	if err != nil {
 		log.Println(err)
 		return
+	}
+
+	proj := struct {
+		Key    string
+		Images []data.Image
+	}{
+		Key:    key,
+		Images: images,
 	}
 
 	tmpl, err := template.ParseFiles("templates/index.html")

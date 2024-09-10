@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -19,7 +20,7 @@ func MakeBucket(path, bType string) Storage {
 	if bType == LOCAL {
 		if ok, _ := exists(path); !ok {
 			// log.Fatal("image path does not exist")
-			if err := os.Mkdir(path, 0777); err != nil {
+			if err := os.MkdirAll(path, 0777); err != nil {
 				log.Fatal("Error creating dir: ", path)
 			}
 		}
@@ -55,4 +56,13 @@ func exists(path string) (bool, error) {
 		return false, nil
 	}
 	return false, err
+}
+
+func CreatePath(path string) error {
+	if ok, _ := exists(path); !ok {
+		if err := os.MkdirAll(path, 0777); err != nil {
+			return fmt.Errorf("Error creating dir: %s, error: %w", path, err)
+		}
+	}
+	return nil
 }

@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,13 +19,14 @@ import (
 )
 
 func ProcessImages() {
-	imagePath := prompt("Enter path to image folder/directory")
 	db := data.NewSQLiteDB()
 	var b data.Project
+	b.Path = prompt("Enter path to image folder/directory")
 	b.Name = prompt("Enter project name")
 	b.VendorID = prompt("Enter your ID")
 	b.ClientID = prompt("Enter your Client's name")
 	b.CreatedAt = time.Now()
+	b.UpdatedAt = time.Now()
 	b.Key = GenerateKey()
 	b.Link = "http://localhost:8080?key=" + b.Key
 
@@ -35,7 +37,7 @@ func ProcessImages() {
 	// walk path
 	var allImages []string
 	var err error
-	err = filepath.Walk(imagePath, func(path string, info fs.FileInfo, err error) error {
+	err = filepath.Walk(b.Path, func(path string, info fs.FileInfo, err error) error {
 		if strings.HasSuffix(strings.ToLower(path), "jpg") || strings.HasSuffix(strings.ToLower(path), "jpeg") {
 			allImages = append(allImages, path)
 		}
@@ -96,9 +98,51 @@ func ShowProjects() {
 	db := data.NewSQLiteDB()
 	projects, _ := db.GetProjects("")
 	for idx, project := range projects {
-		fmt.Printf("%d. %s\n", idx+1, project.Name)
-		fmt.Println(" Client: ", project.ClientID)
-		fmt.Println(" Link: ", project.Link)
+		fmt.Printf("%d. %s\n\n", idx+1, project.Name)
+		fmt.Println("\tClient: ", project.ClientID)
+		fmt.Println("\tKey: ", project.Key)
+		fmt.Println("\tLink: ", project.Link)
+	}
+
+	for {
+		fmt.Println("Enter 0 to exit")
+		projIdx := prompt("View Project number: ")
+
+		if projIdx == "0" {
+			break
+		}
+
+		idx, err := strconv.Atoi(projIdx)
+		if err != nil {
+			fmt.Println("Incorrect input, please try again.")
+			continue
+		}
+
+		if idx > len(projects) {
+			fmt.Println("Incorrect project number, please try again.")
+			continue
+		}
+
+		selectedProj := projects[idx-1]
+		images, err := db.GetImagesByKey(selectedProj.Key)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = storage.CreatePath(filepath.Join("selections", selectedProj.ClientID))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for _, img := range images {
+			if img.Status != 1 {
+				continue
+			}
+			err := os.Link(img.AbsolutePath, filepath.Join("selections", selectedProj.ClientID, img.Path))
+			if err != nil {
+				log.Println("Error linking image: ", img.AbsolutePath, err)
+			}
+		}
 	}
 }
 
