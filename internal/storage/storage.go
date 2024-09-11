@@ -44,7 +44,6 @@ func (b Storage) Save(img, out string, w io.ReadWriter) error {
 	return nil
 }
 
-// exists returns whether the given file or directory exists
 func exists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {
