@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,10 +15,12 @@
             height: 100vh;
             position: relative;
         }
+
         .image-preview {
             max-width: 100%;
             max-height: 80vh;
         }
+
         .status-indicator {
             position: absolute;
             top: 20px;
@@ -28,104 +31,65 @@
             padding: 5px 10px;
             border-radius: 5px;
         }
+
         .btn-navigation {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
             z-index: 10;
         }
+
         .btn-prev {
             left: 20px;
         }
+
         .btn-next {
             right: 20px;
         }
     </style>
 </head>
-<body>
+
+<body style="background-color: #f8f9fa;">
+    {{ $key := .Key }}
+    <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #e3f2fd;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Navbar</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/gallery?key={{$key}}">View selected</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
     <div class="container">
-       {{ $key := .Key }}
         <div class="swipe-area">
-            <button class="btn btn-secondary btn-navigation btn-prev" onclick="showPrevImage()">Prev</button>
+            <button class="btn btn-secondary btn-navigation btn-prev"
+                onclick="showPrevImage('{{len .Images}}')">Prev</button>
             {{range $index, $image := .Images}}
             <div class="image-container" id="image-{{$index}}" style="{{if gt $index 0}}display:none;{{end}}">
-                <div class="status-indicator {{if eq $image.Status 1}}text-success{{else if eq $image.Status 99}}text-danger{{else}}d-none{{end}}">
+                <div
+                    class="status-indicator {{if eq $image.Status 1}}text-success{{else if eq $image.Status 99}}text-danger{{else}}d-none{{end}}">
                     {{if eq $image.Status 1}}Selected{{else if eq $image.Status 0}}Rejected{{end}}
                 </div>
-                <img src="/images/{{ $key }}/{{$image.Path}}" class="image-preview" alt="Image">
+                <img src="/images/{{ $key }}/{{$image.Name}}" class="image-preview" alt="Image">
                 <div class="d-flex justify-content-between mt-2">
-                    <button class="btn btn-success" onclick="updateStatusAndShowNext('{{$image.Path}}', 1, '{{$key}}')">Select</button>
+                    <button class="btn btn-success"
+                        onclick="updateStatusAndShowNext('{{$image.Name}}', 1, '{{$key}}')">Select</button>
                 </div>
             </div>
             {{end}}
-            <button class="btn btn-secondary btn-navigation btn-next" onclick="showNextImage()">Next</button>
+            <button class="btn btn-secondary btn-navigation btn-next"
+                onclick="showNextImage('{{len .Images}}')">Next</button>
         </div>
     </div>
-    
-    <script>
-        let currentIndex = 0;
-        let startX = 0;
 
-        function showNextImage() {
-            document.getElementById('image-' + currentIndex).style.display = 'none';
-            currentIndex++;
-            if (currentIndex >= {{len .Images}}) {
-                currentIndex = 0;
-            }
-            document.getElementById('image-' + currentIndex).style.display = 'block';
-        }
-
-        function showPrevImage() {
-            document.getElementById('image-' + currentIndex).style.display = 'none';
-            currentIndex--;
-            if (currentIndex < 0) {
-                currentIndex = {{len .Images}} - 1;
-            }
-            document.getElementById('image-' + currentIndex).style.display = 'block';
-        }
-
-        function updateStatusAndShowNext(image, status, key) {
-            const formData = new FormData();
-            formData.append('image', image);
-            formData.append('status', status);
-            formData.append('key', key);
-            fetch('/select', {
-                method: 'POST',
-                body: formData
-            }).then(response => {
-                if (response.ok) {
-                    showNextImage();
-                }
-            });
-        }
-
-        function handleTouchStart(event) {
-            startX = event.touches[0].clientX;
-        }
-
-        function handleTouchMove(event) {
-            if (!startX) {
-                return;
-            }
-            let endX = event.touches[0].clientX;
-            let diffX = startX - endX;
-            if (Math.abs(diffX) > 50) {
-                document.getElementById('image-' + currentIndex).style.display = 'none';
-                if (diffX > 0) {
-                    // Swipe left
-                    const image = document.querySelector(`#image-${currentIndex} img`).src.split('/').pop();
-                    updateStatusAndShowNext(image, 'rejected');
-                } else {
-                    // Swipe right
-                    const image = document.querySelector(`#image-${currentIndex} img`).src.split('/').pop();
-                    updateStatusAndShowNext(image, 'selected');
-                }
-                startX = 0; // reset startX
-            }
-        }
-
-        document.querySelector('.swipe-area').addEventListener('touchstart', handleTouchStart);
-        document.querySelector('.swipe-area').addEventListener('touchmove', handleTouchMove);
-    </script>
+    <script src="static/js/main.js"></script>
 </body>
+
 </html>

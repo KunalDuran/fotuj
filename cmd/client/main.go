@@ -10,12 +10,6 @@ const (
 	CMD_LIST_PROJECTS = "2"
 )
 
-type config struct {
-	Client    string
-	Vendor    string
-	ServerURI string
-}
-
 var initialPrompt = `Select action: Type number and press enter: 
 1. Create new project
 2. View projects

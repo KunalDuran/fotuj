@@ -17,8 +17,6 @@ func Boot(db *sql.DB) {
 			key text,
 			name text,
 			path text,
-			vendor_id text,
-			client_id text,
 			link text,
 			created_at text,
 			updated_at text
@@ -30,8 +28,8 @@ func Boot(db *sql.DB) {
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS image (
 		id integer not null primary key,
 		key text,
-		absolute_path text,
 		path text,
+		name text,
 		status text,
 		updated_at text
 	)`)
@@ -52,17 +50,17 @@ func NewSQLiteDB() *SQLiteDB {
 }
 
 func (s SQLiteDB) UpdateImageStatus(key, image, status string) error {
-	_, err := s.db.Exec("UPDATE image SET status=? WHERE key=? AND path=?", status, key, image)
+	_, err := s.db.Exec("UPDATE image SET status=? WHERE key=? AND name=?", status, key, image)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s SQLiteDB) GetProjects(vendorID string) ([]Project, error) {
+func (s SQLiteDB) GetProjects() ([]Project, error) {
 	var projects []Project
 
-	rows, err := s.db.Query("SELECT key, name, link, client_id FROM project")
+	rows, err := s.db.Query("SELECT key, name, link FROM project")
 	if err != nil {
 		log.Println(err)
 		return projects, err
@@ -74,7 +72,6 @@ func (s SQLiteDB) GetProjects(vendorID string) ([]Project, error) {
 			&p.Key,
 			&p.Name,
 			&p.Link,
-			&p.ClientID,
 		)
 
 		projects = append(projects, p)
@@ -102,8 +99,8 @@ func (s SQLiteDB) GetImagesByKey(key string) ([]Image, error) {
 	var result []Image
 
 	stmt, err := s.db.Prepare(`SELECT 
+		name,
 		path,
-		absolute_path,
 		status FROM image WHERE key=?`)
 	if err != nil {
 		return result, err
@@ -113,8 +110,8 @@ func (s SQLiteDB) GetImagesByKey(key string) ([]Image, error) {
 	for rows.Next() {
 		var img Image
 		rows.Scan(
+			&img.Name,
 			&img.Path,
-			&img.AbsolutePath,
 			&img.Status,
 		)
 		result = append(result, img)
@@ -131,26 +128,24 @@ func (s SQLiteDB) AddProject(p Project) error {
 		key,
 		name,
 		path,
-		vendor_id,
-		client_id,
 		link,
 		created_at,
 		updated_at
-	) VALUES(?,?,?,?,?,?,?,?)`)
+	) VALUES(?,?,?,?,?,?)`)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(p.Key, p.Name, p.Path, p.VendorID, p.ClientID, p.Link, p.CreatedAt, p.UpdatedAt)
+	_, err = stmt.Exec(p.Key, p.Name, p.Path, p.Link, p.CreatedAt, p.UpdatedAt)
 	if err != nil {
 		return err
 	}
 
 	stmt2, err := s.db.Prepare(`INSERT INTO image(
 		key,
-		absolute_path,
 		path,
+		name,
 		status,
 		updated_at
 	) VALUES(?,?,?,?,?)`)
@@ -159,7 +154,7 @@ func (s SQLiteDB) AddProject(p Project) error {
 	}
 
 	for _, img := range p.Images {
-		_, err = stmt2.Exec(p.Key, img.AbsolutePath, img.Path, img.Status, img.UpdatedAt)
+		_, err = stmt2.Exec(p.Key, img.Path, img.Name, img.Status, img.UpdatedAt)
 		if err != nil {
 			log.Println(err)
 		}

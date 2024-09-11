@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 )
 
-const AMZ = "S3"
 const LOCAL = "local"
 
 type Storage struct {
@@ -16,7 +15,7 @@ type Storage struct {
 	Type string
 }
 
-func MakeBucket(path, bType string) Storage {
+func Boot(path, bType string) Storage {
 	if bType == LOCAL {
 		if ok, _ := exists(path); !ok {
 			// log.Fatal("image path does not exist")
@@ -30,7 +29,7 @@ func MakeBucket(path, bType string) Storage {
 }
 
 func (b Storage) Save(img, out string, w io.ReadWriter) error {
-	outputPath := filepath.Join(out, filepath.Base(img))
+	outputPath := filepath.Join(out, img)
 	f, err := os.OpenFile(outputPath, os.O_CREATE, 0777)
 	if err != nil {
 		return err

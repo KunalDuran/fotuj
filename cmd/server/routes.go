@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -42,16 +41,35 @@ func (app Application) indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app Application) bucketHandler(w http.ResponseWriter, r *http.Request) {
-	var b data.Project
+func (app Application) galleryHandler(w http.ResponseWriter, r *http.Request) {
+	key := r.URL.Query().Get("key")
 
-	err := json.NewDecoder(r.Body).Decode(&b)
+	images, err := app.DB.GetImagesByKey(key)
 	if err != nil {
-		fmt.Fprint(w, err)
+		log.Fatal(err)
 	}
 
-	app.DB.AddProject(b)
-	fmt.Fprint(w, "Successfully saved")
+	tmpl, err := template.ParseFiles("templates/gallery.html")
+	if err != nil {
+		log.Println("Template parsing error:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	result := struct {
+		Key    string
+		Images []data.Image
+	}{
+		Key:    key,
+		Images: images,
+	}
+
+	err = tmpl.Execute(w, result)
+	if err != nil {
+		log.Println("Template execution error:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (app Application) updateStatusHandler(w http.ResponseWriter, r *http.Request) {
