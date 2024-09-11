@@ -18,7 +18,6 @@ type Storage struct {
 func Boot(path, bType string) Storage {
 	if bType == LOCAL {
 		if ok, _ := exists(path); !ok {
-			// log.Fatal("image path does not exist")
 			if err := os.MkdirAll(path, 0777); err != nil {
 				log.Fatal("Error creating dir: ", path)
 			}
