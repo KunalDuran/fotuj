@@ -1,0 +1,37 @@
+Photo shortlisting application
+
+
+Pain point:
+ - Hectic photo selection process for wedding album.
+ - Data sharing [hard disk or cloud storage]
+ - Back and forth travel or chats between photographer and client 
+
+
+MVP:
+    Client-side [selector]
+    - show all/selected images.
+    - slideshow with togglable select button.
+    - selection completed button -> notify the photographer
+
+
+    Photographer side [parser]
+    - Run our tool to upload images to the cloud.
+    - generate shareable link.
+
+    - parser will upload photos to the s3 bucket
+    - on the server side (optimize/compress image?)
+    - after completion -> protected link
+
+    - client can see all the photos
+    - start selecting -> http request photo's uid.
+
+    - storing in Database.
+
+
+Technologies:
+    - Language: Go and HTML/CSS/Bootstrap (maybe react in future?).
+    - Database: SQLite3 (mongodb ?)
+    - Hosting: AWS EC2 instance
+    - Cloud storage: AWS S3 bucket.
+    - Version control : Github
+    - CICD: github actions?
